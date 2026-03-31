@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlist | Mariane Dutra</title>
+    <style>
+        :root {
+            --primary: #2c3e50; /* Azul industrial */
+            --accent: #e67e22;  /* Laranja SetupBoom */
+            --bg: #f4f7f6;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--primary);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 500px;
+            background: var(--white);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 2px solid var(--bg);
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+
+        .setup-tag {
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .wish-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .wish-item {
+            display: flex;
+            align-items: center;
+            background: var(--bg);
+            margin-bottom: 12px;
+            padding: 15px;
+            border-radius: 12px;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+
+        .wish-item:hover {
+            transform: translateX(10px);
+            border-left: 4px solid var(--accent);
+        }
+
+        .icon {
+            font-size: 20px;
+            margin-right: 15px;
+        }
+
+        .item-info {
+            flex-grow: 1;
+        }
+
+        .item-name {
+            font-weight: 600;
+            display: block;
+        }
+
+        .item-category {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .btn-link {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #bdc3c7;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <span class="setup-tag">SetupBoom Presents</span>
+        <h1>Wishlist: Mariane Dutra</h1>
+    </header>
+
+    <ul class="wish-list">
+        <li class="wish-item">
+            <span class="icon">💻</span>
+            <div class="item-info">
+                <span class="item-name">Monitor UltraWide</span>
+                <span class="item-category">Setup & Produtividade</span>
+            </div>
+            <a href="#" class="btn-link">Ver</a>
+        </li>
+
+        <li class="wish-item">
+            <span class="icon">📚</span>
+            <div class="item-info">
+                <span class="item-name">Livro: Lean Manufacturing</span>
+                <span class="item-category">Estudos BOM</span>
+            </div>
+            <a href="#" class="btn-link">Ver</a>
+        </li>
+
+        <li class="wish-item">
+            <span class="icon">☕</span>
+            <div class="item-info">
+                <span class="item-name">Cafeteira Italiana</span>
+                <span class="item-category">Combustível Criativo</span>
+            </div>
+            <a href="#" class="btn-link">Ver</a>
+        </li>
+
+        <li class="wish-item">
+            <span class="icon">🛠️</span>
+            <div class="item-info">
+                <span class="item-name">Kit Ferramentas Precisão</span>
+                <span class="item-category">Hardware</span>
+            </div>
+            <a href="#" class="btn-link">Ver</a>
+        </li>
+    </ul>
+
+    <footer>
+        © 2026 SetupBoom | Organizando o próximo BOOM.
+    </footer>
+</div>
+
+</body>
+</html>
