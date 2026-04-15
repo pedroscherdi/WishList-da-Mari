@@ -1,165 +1,758 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wishlist | Mariane Dutra</title>
+    <title>PhysioPro Ultimate | Prontuário Eletrônico</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        /* === VARIÁVEIS DO SISTEMA === */
         :root {
-            --primary: #2c3e50; /* Azul industrial */
-            --accent: #e67e22;  /* Laranja SetupBoom */
-            --bg: #f4f7f6;
-            --white: #ffffff;
+            --primary: #2563EB; --primary-hover: #1D4ED8; --primary-light: #DBEAFE;
+            --secondary: #475569; --danger: #DC2626; --danger-light: #FEE2E2;
+            --success: #16A34A; --warning: #F59E0B;
+            --bg-body: #F1F5F9; --bg-card: #FFFFFF; --bg-input: #F8FAFC;
+            --text-main: #0F172A; --text-muted: #64748B; --border: #E2E8F0;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            --radius: 10px; --sidebar-w: 260px;
+        }
+        body.dark-mode {
+            --primary: #3B82F6; --primary-hover: #60A5FA; --primary-light: #1E3A8A;
+            --bg-body: #0F172A; --bg-card: #1E293B; --bg-input: #0F172A;
+            --text-main: #F8FAFC; --text-muted: #94A3B8; --border: #334155;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.5);
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
-            color: var(--primary);
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
+        /* === RESET & BASE === */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-main); font-size: 14px; transition: background 0.3s, color 0.3s; overflow: hidden; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        
+        /* === TELA DE LOGIN === */
+        #login-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-body); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: 0.5s; }
+        .login-box { background: var(--bg-card); padding: 40px; border-radius: var(--radius); box-shadow: var(--shadow); width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
+        .login-box h1 { color: var(--primary); margin-bottom: 20px; font-weight: 800; }
 
-        .container {
-            width: 90%;
-            max-width: 500px;
-            background: var(--white);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
+        /* === LAYOUT PRINCIPAL === */
+        .app { display: none; height: 100vh; width: 100vw; }
+        
+        /* SIDEBAR */
+        .sidebar { width: var(--sidebar-w); background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: 0.3s; z-index: 100; }
+        .brand { padding: 20px; font-size: 1.5rem; font-weight: 800; color: var(--primary); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+        .nav-menu { flex: 1; overflow-y: auto; padding: 15px 10px; }
+        .nav-item { padding: 10px 15px; margin-bottom: 4px; border-radius: 8px; cursor: pointer; font-weight: 500; color: var(--text-muted); transition: 0.2s; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; }
+        .nav-item:hover, .nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+        
+        /* MAIN CONTENT */
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .topbar { height: 65px; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; }
+        .patient-badge { display: inline-flex; align-items: center; background: var(--primary-light); color: var(--primary); padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; letter-spacing: 0.5px; }
+        .actions-btn { background: none; border: 1px solid var(--border); color: var(--text-main); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; transition: 0.2s; font-size: 0.85rem; }
+        .actions-btn:hover { background: var(--border); }
+        .content { flex: 1; overflow-y: auto; padding: 30px; position: relative; }
 
-        header {
-            text-align: center;
-            border-bottom: 2px solid var(--bg);
-            padding-bottom: 20px;
-            margin-bottom: 20px;
-        }
+        /* === COMPONENTES DA INTERFACE === */
+        .tab { display: none; animation: fadeUp 0.4s ease; }
+        .tab.active { display: block; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        h1 {
-            margin: 0;
-            font-size: 24px;
-            letter-spacing: 1px;
-        }
+        .card { background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); padding: 25px; margin-bottom: 25px; box-shadow: var(--shadow); }
+        .card-title { font-size: 1.15rem; color: var(--text-main); font-weight: 700; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--bg-body); display: flex; justify-content: space-between; align-items: center; }
 
-        .setup-tag {
-            color: var(--accent);
-            font-weight: bold;
-            font-size: 14px;
-            text-transform: uppercase;
-        }
+        /* GRIDS & FORMS */
+        .grid-1 { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
 
-        .wish-list {
-            list-style: none;
-            padding: 0;
-        }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
+        label { font-weight: 600; color: var(--text-muted); margin-bottom: 6px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        input, select, textarea { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-input); color: var(--text-main); font-size: 0.95rem; outline: none; transition: 0.2s; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+        input[readonly] { background: var(--border); cursor: not-allowed; opacity: 0.8; }
+        textarea { resize: vertical; min-height: 80px; }
 
-        .wish-item {
-            display: flex;
-            align-items: center;
-            background: var(--bg);
-            margin-bottom: 12px;
-            padding: 15px;
-            border-radius: 12px;
-            transition: transform 0.2s;
-            cursor: pointer;
-        }
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 15px; background: var(--bg-input); padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer; font-weight: 500; }
+        .checkbox-item input { width: 16px; height: 16px; accent-color: var(--primary); }
 
-        .wish-item:hover {
-            transform: translateX(10px);
-            border-left: 4px solid var(--accent);
-        }
+        .btn { padding: 10px 20px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; transition: 0.2s; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:hover { background: var(--bg-body); }
 
-        .icon {
-            font-size: 20px;
-            margin-right: 15px;
-        }
+        /* TABELAS */
+        .table-responsive { overflow-x: auto; width: 100%; }
+        table { width: 100%; border-collapse: collapse; text-align: left; margin-top: 10px; }
+        th, td { padding: 12px 15px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        th { background: var(--bg-body); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px; }
+        tbody tr:hover { background: var(--bg-input); }
+        
+        /* ALERTAS */
+        .alert-box { padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; font-weight: 600; border-left: 4px solid transparent; animation: fadeUp 0.3s; }
+        .alert-danger { background: var(--danger-light); color: var(--danger); border-left-color: var(--danger); display: flex; align-items: center; gap: 10px; }
+        .bg-red { background-color: var(--danger) !important; color: white !important; border-color: var(--danger) !important; }
+        .bg-orange { background-color: var(--warning) !important; color: white !important; border-color: var(--warning) !important; }
 
-        .item-info {
-            flex-grow: 1;
-        }
+        /* MAPA DE DOR (SVG) */
+        .body-map-container { display: flex; gap: 30px; flex-wrap: wrap; }
+        .body-wrapper { position: relative; width: 300px; height: 600px; background: var(--bg-body); border-radius: 12px; cursor: crosshair; display: flex; justify-content: center; align-items: center; border: 1px solid var(--border); }
+        .body-svg { height: 95%; width: auto; transition: 0.6s cubic-bezier(0.4, 0, 0.2, 1); filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1)); }
+        .body-svg.back { transform: scaleX(-1); }
+        .body-svg .skin { fill: #CBD5E1; transition: 0.3s; }
+        body.dark-mode .body-svg .skin { fill: #334155; }
+        .pain-pin { position: absolute; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; transform: translate(-50%, -50%); cursor: pointer; z-index: 10; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0,0,0,0.4); } 100% { box-shadow: 0 0 0 10px rgba(0,0,0,0); } }
 
-        .item-name {
-            font-weight: 600;
-            display: block;
-        }
+        /* PROGRESS BAR */
+        #progress-container { position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--bg-body); z-index: 100; }
+        #progress-bar { height: 100%; width: 0%; background: var(--success); transition: 0.4s; }
 
-        .item-category {
-            font-size: 12px;
-            color: #7f8c8d;
-        }
+        /* DASHBOARD CARDS */
+        .kpi-card { background: var(--bg-card); padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); text-align: center; }
+        .kpi-value { font-size: 2.5rem; font-weight: 800; color: var(--primary); margin: 10px 0; }
+        
+        /* GRÁFICO CSS */
+        .chart-box { display: flex; align-items: flex-end; gap: 15px; height: 250px; padding: 20px; background: var(--bg-input); border-radius: var(--radius); border: 1px solid var(--border); overflow-x: auto; }
+        .chart-bar-wrap { display: flex; flex-direction: column; align-items: center; height: 100%; width: 40px; justify-content: flex-end; }
+        .chart-bar { width: 100%; background: var(--primary); border-radius: 4px 4px 0 0; transition: 0.5s; }
 
-        .btn-link {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 12px;
-        }
-
-        footer {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 12px;
-            color: #bdc3c7;
+        /* IMPRESSÃO */
+        @media print {
+            .sidebar, .topbar, .btn, #login-overlay, .nav-menu { display: none !important; }
+            .app, .main, .content { height: auto !important; overflow: visible !important; display: block !important; }
+            .tab { display: block !important; margin-bottom: 30px; page-break-inside: avoid; }
+            .card { border: 1px solid #000; box-shadow: none; padding: 15px; }
+            body { background: white; color: black; font-size: 12px; }
+            input, select, textarea { border: none; border-bottom: 1px solid #ccc; background: transparent; }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <span class="setup-tag">SetupBoom Presents</span>
-        <h1>Wishlist: Mariane Dutra</h1>
-    </header>
+    <div id="login-overlay">
+        <div class="login-box">
+            <h1>⚕️ PhysioPro</h1>
+            <p style="color:var(--text-muted); margin-bottom:20px;">Prontuário Eletrônico Profissional</p>
+            <div class="form-group"><input type="text" id="login-user" placeholder="Usuário (Admin)" value="admin"></div>
+            <div class="form-group"><input type="password" id="login-pass" placeholder="Senha" value="1234"></div>
+            <button class="btn btn-primary" style="width:100%; font-size:1.1rem; padding:12px;" onclick="realizarLogin()">Acessar Sistema</button>
+        </div>
+    </div>
 
-    <ul class="wish-list">
-        <li class="wish-item">
-            <span class="icon">💻</span>
-            <div class="item-info">
-                <span class="item-name">Monitor UltraWide</span>
-                <span class="item-category">Setup & Produtividade</span>
+    <div class="app" id="app-core">
+        <div id="progress-container"><div id="progress-bar"></div></div>
+        
+        <aside class="sidebar">
+            <div class="brand">⚕️ PhysioPro <span style="font-size:0.7rem; background:var(--danger); color:white; padding:2px 6px; border-radius:10px;">PRO</span></div>
+            <nav class="nav-menu">
+                <p style="font-size:0.7rem; color:var(--text-muted); font-weight:700; margin:10px 15px 5px; text-transform:uppercase;">Gestão</p>
+                <div class="nav-item active" onclick="openTab('tab-dashboard')">📊 Dashboard</div>
+                <div class="nav-item" onclick="openTab('tab-pacientes')">👥 Meus Pacientes</div>
+                
+                <p style="font-size:0.7rem; color:var(--text-muted); font-weight:700; margin:20px 15px 5px; text-transform:uppercase;">Prontuário Clínico</p>
+                <div class="nav-item" onclick="openTab('tab-cadastro')">👤 Cadastro & História</div>
+                <div class="nav-item" onclick="openTab('tab-avaliacao')">📋 Avaliação & Escalas</div>
+                <div class="nav-item" onclick="openTab('tab-fisica')">📐 Exame Físico (Gonio/Força)</div>
+                <div class="nav-item" onclick="openTab('tab-testes')">🦴 Testes Ortopédicos</div>
+                <div class="nav-item" onclick="openTab('tab-dor')">📍 Mapa Anatômico de Dor</div>
+                
+                <p style="font-size:0.7rem; color:var(--text-muted); font-weight:700; margin:20px 15px 5px; text-transform:uppercase;">Intervenção</p>
+                <div class="nav-item" onclick="openTab('tab-tratamento')">🛠️ Plano de Tratamento</div>
+                <div class="nav-item" onclick="openTab('tab-sessoes')">📈 Evolução (Sessões)</div>
+                
+                <p style="font-size:0.7rem; color:var(--text-muted); font-weight:700; margin:20px 15px 5px; text-transform:uppercase;">Documentos</p>
+                <div class="nav-item" onclick="openTab('tab-relatorios')">🖨️ Relatórios & Alta</div>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <header class="topbar">
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <span class="patient-badge" id="header-id">SEM PACIENTE</span>
+                    <strong style="font-size: 1.1rem;" id="header-nome">Acesse a aba 'Meus Pacientes' para começar</strong>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="actions-btn" onclick="toggleTheme()">🌙 Tema</button>
+                    <button class="btn btn-primary" onclick="savePatientDB()">💾 Salvar Dados</button>
+                </div>
+            </header>
+
+            <div class="content">
+                
+                <div id="tab-dashboard" class="tab active">
+                    <h2 style="margin-bottom:20px;">Visão Geral da Clínica</h2>
+                    <div class="grid-4">
+                        <div class="kpi-card"><h3>Total Pacientes</h3><div class="kpi-value" id="dash-total">0</div></div>
+                        <div class="kpi-card"><h3>Ativos</h3><div class="kpi-value" id="dash-ativos" style="color:var(--success)">0</div></div>
+                        <div class="kpi-card"><h3>Em Alta</h3><div class="kpi-value" id="dash-alta" style="color:var(--secondary)">0</div></div>
+                        <div class="kpi-card"><h3>Média Dor Inicial</h3><div class="kpi-value" id="dash-dor" style="color:var(--danger)">0</div></div>
+                    </div>
+                </div>
+
+                <div id="tab-pacientes" class="tab">
+                    <div class="card">
+                        <div class="card-title">
+                            Base de Pacientes
+                            <button class="btn btn-primary" onclick="createNewPatient()">+ Novo Paciente</button>
+                        </div>
+                        <input type="text" id="search-pat" placeholder="🔍 Buscar por Nome, ID ou Patologia..." style="width:100%; margin-bottom:15px;" onkeyup="renderPatientTable()">
+                        <div class="table-responsive">
+                            <table>
+                                <thead><tr><th>ID</th><th>Nome</th><th>Contato</th><th>Patologia/CID</th><th>Status</th><th>Ações</th></tr></thead>
+                                <tbody id="table-patients"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-cadastro" class="tab">
+                    <div class="alert-box alert-danger" id="red-flag-alert">
+                        ⚠️ ATENÇÃO: Sinais de Alerta Vermelho (Red Flags) detectados no histórico deste paciente! Recomenda-se avaliação médica complementar.
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title">Dados Pessoais</h2>
+                        <form id="form-cad" class="auto-save">
+                            <div class="grid-4">
+                                <div class="form-group"><label>Prontuário ID</label><input type="text" id="cad_id" readonly></div>
+                                <div class="form-group" style="grid-column: span 2;"><label>Nome Completo *</label><input type="text" id="cad_nome" required></div>
+                                <div class="form-group"><label>Data Nasc.</label><input type="date" id="cad_nasc" onchange="calcBase()"></div>
+                            </div>
+                            <div class="grid-4">
+                                <div class="form-group"><label>Idade</label><input type="text" id="cad_idade" readonly></div>
+                                <div class="form-group"><label>Sexo</label><select id="cad_sexo"><option>Feminino</option><option>Masculino</option><option>Outro</option></select></div>
+                                <div class="form-group"><label>Peso (kg)</label><input type="number" step="0.1" id="cad_peso" oninput="calcBase()"></div>
+                                <div class="form-group"><label>Altura (m)</label><input type="number" step="0.01" id="cad_altura" oninput="calcBase()"></div>
+                            </div>
+                            <div class="grid-4">
+                                <div class="form-group"><label>IMC</label><input type="text" id="cad_imc" readonly></div>
+                                <div class="form-group"><label>Telefone</label><input type="tel" id="cad_tel"></div>
+                                <div class="form-group"><label>Profissão</label><input type="text" id="cad_prof"></div>
+                                <div class="form-group"><label>Lado Dominante</label><select id="cad_dom"><option>Destro</option><option>Canhoto</option><option>Ambidestro</option></select></div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title">Histórico Médico (Comorbidades) & Red Flags</h2>
+                        <div class="checkbox-group auto-save" id="form-hist">
+                            <label class="checkbox-item"><input type="checkbox" id="hx_has"> Hipertensão</label>
+                            <label class="checkbox-item"><input type="checkbox" id="hx_dm"> Diabetes</label>
+                            <label class="checkbox-item"><input type="checkbox" id="hx_cirurgia"> Cirurgia Prévia</label>
+                            <label class="checkbox-item"><input type="checkbox" id="hx_fratura"> Fraturas</label>
+                            <label class="checkbox-item"><input type="checkbox" id="hx_protese"> Prótese Articular</label>
+                            <label class="checkbox-item"><input type="checkbox" id="hx_neuro"> Doença Neurológica</label>
+                            <label class="checkbox-item" style="color:var(--danger);"><input type="checkbox" id="rf_cancer" class="trigger-red"> Histórico de Câncer</label>
+                            <label class="checkbox-item" style="color:var(--danger);"><input type="checkbox" id="rf_peso" class="trigger-red"> Perda de Peso Inexplicável</label>
+                            <label class="checkbox-item" style="color:var(--danger);"><input type="checkbox" id="rf_febre" class="trigger-red"> Febre Noturna</label>
+                            <label class="checkbox-item" style="color:var(--danger);"><input type="checkbox" id="rf_trauma" class="trigger-red"> Trauma Severo Recente</label>
+                        </div>
+                        <div class="form-group" style="margin-top:15px;"><label>Medicamentos em Uso</label><textarea id="cad_meds" class="auto-save"></textarea></div>
+                    </div>
+                </div>
+
+                <div id="tab-avaliacao" class="tab">
+                    <div class="card">
+                        <h2 class="card-title">Anamnese Específica</h2>
+                        <div class="grid-2 auto-save" id="form-anamnese">
+                            <div class="form-group"><label>Diagnóstico Fisioterapêutico / Patologia</label><input type="text" id="ava_patologia" placeholder="Ex: Tendinopatia de Manguito Rotador"></div>
+                            <div class="form-group"><label>Código CID-10</label><input type="text" id="ava_cid" placeholder="Busca manual. Ex: M75"></div>
+                            <div class="form-group" style="grid-column: span 2;"><label>Queixa Principal (HDA)</label><textarea id="ava_queixa"></textarea></div>
+                            <div class="form-group"><label>Início dos Sintomas</label><input type="text" id="ava_inicio" placeholder="Ex: Há 3 semanas, Súbito"></div>
+                            <div class="form-group"><label>Mecanismo da Lesão</label><input type="text" id="ava_mecanismo"></div>
+                            <div class="form-group"><label>Fatores Agravantes</label><textarea id="ava_agravantes" rows="2"></textarea></div>
+                            <div class="form-group"><label>Fatores de Melhora</label><textarea id="ava_melhora" rows="2"></textarea></div>
+                            <div class="form-group" style="grid-column: span 2;"><label>Objetivos do Paciente com a Fisioterapia</label><input type="text" id="ava_objetivos_paciente"></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title">Escalas Funcionais e Questionários</h2>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">Preencha o score total dos questionários aplicados.</p>
+                        <div class="grid-4 auto-save" id="form-escalas">
+                            <div class="form-group"><label>Oswestry (Lombar %)</label><input type="number" id="esc_oswestry" placeholder="0-100"></div>
+                            <div class="form-group"><label>NDI (Cervical %)</label><input type="number" id="esc_ndi" placeholder="0-100"></div>
+                            <div class="form-group"><label>DASH (Membro Superior)</label><input type="number" id="esc_dash" placeholder="0-100"></div>
+                            <div class="form-group"><label>WOMAC (Quadril/Joelho)</label><input type="number" id="esc_womac" placeholder="0-96"></div>
+                            <div class="form-group"><label>Berg (Equilíbrio)</label><input type="number" id="esc_berg" placeholder="0-56"></div>
+                            <div class="form-group"><label>Risco de Quedas</label><select id="esc_quedas"><option>Baixo</option><option>Moderado</option><option>Alto</option></select></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-fisica" class="tab">
+                    <div class="grid-2">
+                        <div class="card">
+                            <h2 class="card-title">Goniometria (Graus)</h2>
+                            <p style="font-size:0.8rem; margin-bottom:10px;">Valores restritos (<80% do normal) ficam em <b style="color:var(--danger)">vermelho</b>.</p>
+                            <div class="table-responsive">
+                                <table>
+                                    <thead><tr><th>Articulação/Mov.</th><th>Norm.</th><th>Esq.</th><th>Dir.</th></tr></thead>
+                                    <tbody id="tb-gonio" class="auto-save"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h2 class="card-title">Força Muscular (Escala MRC 0-5)</h2>
+                            <p style="font-size:0.8rem; margin-bottom:10px;">Grau menor que 5 fica em <b style="color:var(--warning)">laranja</b>.</p>
+                            <div class="table-responsive">
+                                <table>
+                                    <thead><tr><th>Grupo Muscular</th><th>Esq.</th><th>Dir.</th></tr></thead>
+                                    <tbody id="tb-forca" class="auto-save"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h2 class="card-title">Avaliação da Marcha e Funcional</h2>
+                        <div class="checkbox-group auto-save" id="form-marcha">
+                            <label class="checkbox-item"><input type="checkbox" id="m_independente"> Independente</label>
+                            <label class="checkbox-item"><input type="checkbox" id="m_antalgica"> Antálgica</label>
+                            <label class="checkbox-item"><input type="checkbox" id="m_claudicante"> Claudicante</label>
+                            <label class="checkbox-item"><input type="checkbox" id="m_arrasto"> Arrasto de Ponta</label>
+                            <label class="checkbox-item"><input type="checkbox" id="m_auxilio"> Uso de Andador/Bengala</label>
+                        </div>
+                        <div class="form-group auto-save" style="margin-top:15px;"><label>Dificuldades Funcionais Relatadas (Agachar, Correr, etc.)</label><textarea id="ava_funcao_obs" rows="2"></textarea></div>
+                    </div>
+                </div>
+
+                <div id="tab-testes" class="tab">
+                    <div class="card">
+                        <h2 class="card-title">Testes Ortopédicos Especiais</h2>
+                        <div class="grid-2" id="box-testes-orto">
+                            </div>
+                        
+                        <div class="alert-box" id="auto-diag-box" style="display:block; margin-top:20px; background:var(--primary-light); color:var(--primary); border-left:4px solid var(--primary);">
+                            🤖 <b>Sugestão Diagnóstica Baseada nos Testes:</b> <span id="txt-diag-sugestao">Selecione resultados positivos acima.</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2 class="card-title">Avaliação Neurológica (Básica)</h2>
+                        <div class="grid-3 auto-save" id="form-neuro">
+                            <div class="form-group"><label>Sensibilidade (Dermátomos)</label><select id="n_sensi"><option>Preservada</option><option>Hipoestesia</option><option>Hiperestesia</option><option>Parestesia</option></select></div>
+                            <div class="form-group"><label>Reflexos (Miotáticos)</label><select id="n_refl"><option>Normorreflexia</option><option>Hiporreflexia</option><option>Arreflexia</option><option>Hiperreflexia</option></select></div>
+                            <div class="form-group"><label>Tônus Muscular</label><select id="n_tonus"><option>Normotonia</option><option>Hipotonia</option><option>Hipertonia (Espasticidade)</option><option>Hipertonia (Rigidez)</option></select></div>
+                            <div class="form-group" style="grid-column: span 3;"><label>Observações Neurológicas</label><input type="text" id="n_obs"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-dor" class="tab">
+                    <div class="card">
+                        <h2 class="card-title">Mapa Anatômico de Dor</h2>
+                        <div class="body-map-container">
+                            <div style="display:flex; flex-direction:column; gap:10px;">
+                                <button class="btn btn-outline" style="width:100%; font-weight:800;" onclick="toggleBody()">🔄 VIRAR FRENTE / COSTAS</button>
+                                <div class="body-wrapper" id="svg-container" onclick="addPain(event)">
+                                    <svg class="body-svg" id="body-vector" viewBox="0 0 100 220" preserveAspectRatio="xMidYMid meet">
+                                        <circle class="skin" cx="50" cy="22" r="13"/>
+                                        <path class="skin" d="M 42 38 L 30 38 C 20 38, 16 45, 16 55 L 16 115 C 16 122, 24 122, 24 115 L 24 65 C 24 58, 30 58, 32 65 L 32 105 L 32 205 C 32 212, 44 212, 44 205 L 44 115 C 44 105, 56 105, 56 115 L 56 205 C 56 212, 68 212, 68 205 L 68 105 L 68 65 C 70 58, 76 58, 76 65 L 76 115 C 76 122, 84 122, 84 115 L 84 55 C 84 45, 80 38, 70 38 L 58 38 Z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div style="flex:1;">
+                                <div class="grid-2" style="background:var(--bg-input); padding:20px; border-radius:var(--radius); border:1px solid var(--border); margin-bottom:20px;">
+                                    <div class="form-group" style="grid-column: span 2;">
+                                        <label>1. Clique na imagem ao lado. 2. Defina a Intensidade (EVA 0-10)</label>
+                                        <input type="range" id="pain_val" min="0" max="10" value="5" oninput="document.getElementById('pain_lbl').innerText=this.value">
+                                        <div id="pain_lbl" style="text-align:center; font-size:1.5rem; font-weight:800; color:var(--danger); margin-top:5px;">5</div>
+                                    </div>
+                                    <div class="form-group"><label>Tipo de Dor</label><select id="pain_type"><option>Queimação</option><option>Pontada / Fincada</option><option>Cansaço / Peso</option><option>Irradiada</option></select></div>
+                                    <div class="form-group"><label>Frequência</label><select id="pain_freq"><option>Constante</option><option>Ao movimento</option><option>Noturna</option></select></div>
+                                    <div class="form-group" style="grid-column: span 2;"><label>Anotação do Local (Ex: L5-S1, Tendão Aquiles)</label><input type="text" id="pain_nota"></div>
+                                </div>
+                                <h3>Pontos Registrados</h3>
+                                <div id="pain-list" style="max-height:280px; overflow-y:auto; margin-top:10px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-tratamento" class="tab">
+                    <div class="card">
+                        <h2 class="card-title">Plano Terapêutico</h2>
+                        <div class="grid-2 auto-save" id="form-trat">
+                            <div class="form-group"><label>Objetivos a Curto Prazo (Dor/Edema)</label><textarea id="obj_curto" rows="3"></textarea></div>
+                            <div class="form-group"><label>Objetivos a Longo Prazo (Função/Retorno)</label><textarea id="obj_longo" rows="3"></textarea></div>
+                        </div>
+                        <h3 style="margin:20px 0 10px; font-size:0.9rem; text-transform:uppercase; color:var(--text-muted);">Técnicas e Condutas Planejadas</h3>
+                        <div class="checkbox-group auto-save" id="form-condutas">
+                            <label class="checkbox-item"><input type="checkbox" id="t_tens"> Analgesia (TENS/FES)</label>
+                            <label class="checkbox-item"><input type="checkbox" id="t_termo"> Termoterapia</label>
+                            <label class="checkbox-item"><input type="checkbox" id="t_tm"> Terapia Manual / Miofascial</label>
+                            <label class="checkbox-item"><input type="checkbox" id="t_cinesio"> Cinesioterapia</label>
+                            <label class="checkbox-item"><input type="checkbox" id="t_fort"> Fortalecimento Muscular</label>
+                            <label class="checkbox-item"><input type="checkbox" id="t_proprio"> Treino Proprioceptivo</label>
+                            <label class="checkbox-item"><input type="checkbox" id="t_pilates"> Pilates Clínico</label>
+                            <label class="checkbox-item"><input type="checkbox" id="t_dry"> Dry Needling</label>
+                        </div>
+                        <div class="grid-2 auto-save" style="margin-top:20px;">
+                            <div class="form-group"><label>Frequência Semanal</label><select id="trat_freq"><option>1x por semana</option><option>2x por semana</option><option>3x por semana</option><option>Diário</option></select></div>
+                            <div class="form-group"><label>Previsão de Alta (Nº de Sessões)</label><input type="number" id="trat_prev" placeholder="Ex: 10"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-sessoes" class="tab">
+                    <div class="card">
+                        <div class="card-title">
+                            Evolução e Sessões Realizadas
+                            <button class="btn btn-primary" onclick="addSession()">+ Nova Sessão</button>
+                        </div>
+                        
+                        <div style="margin-bottom:30px;">
+                            <h4 style="margin-bottom:10px; color:var(--text-muted);">Gráfico de Evolução da Dor (EVA) ao longo das sessões</h4>
+                            <div class="chart-box" id="evo-chart"></div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table>
+                                <thead><tr><th>Data</th><th>Sessão</th><th>Dor (EVA)</th><th>Relato e Conduta Aplicada</th><th>Ações</th></tr></thead>
+                                <tbody id="tb-sessoes"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-relatorios" class="tab">
+                    <div class="card" style="text-align: center; padding: 50px 20px;">
+                        <h2 class="card-title" style="justify-content:center; border:none; font-size:1.5rem;">Gestão de Documentos e Prontuário</h2>
+                        <p style="color:var(--text-muted); margin-bottom:40px;">Gere o documento legal do prontuário para impressão, salve em PDF ou faça backup local dos dados.</p>
+                        
+                        <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">
+                            <button class="btn btn-primary" style="padding:15px 30px; font-size:1rem;" onclick="window.print()">🖨️ Imprimir Prontuário (PDF)</button>
+                            <button class="btn btn-outline" style="padding:15px 30px; font-size:1rem;" onclick="exportJSON()">💾 Exportar Backup (JSON)</button>
+                            <button class="btn btn-danger" style="padding:15px 30px; font-size:1rem;" onclick="darAlta()">✅ Registrar Alta Clínica</button>
+                        </div>
+
+                        <div style="margin-top:60px; background:var(--bg-input); padding:30px; border-radius:var(--radius); border:1px dashed var(--border); text-align:left;">
+                            <h3 style="text-align:center; margin-bottom:40px;">Termo de Responsabilidade e Assinaturas</h3>
+                            <div style="display:flex; justify-content:space-around;">
+                                <div style="width:40%; border-top:1px solid var(--text-main); text-align:center; padding-top:10px;">
+                                    <strong>Fisioterapeuta Responsável</strong><br><small style="color:var(--text-muted);">Carimbo / CREFITO</small>
+                                </div>
+                                <div style="width:40%; border-top:1px solid var(--text-main); text-align:center; padding-top:10px;">
+                                    <strong>Paciente / Responsável Legal</strong><br><small id="print-date" style="color:var(--text-muted);"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-            <a href="#" class="btn-link">Ver</a>
-        </li>
+        </main>
+    </div>
 
-        <li class="wish-item">
-            <span class="icon">📚</span>
-            <div class="item-info">
-                <span class="item-name">Livro: Lean Manufacturing</span>
-                <span class="item-category">Estudos BOM</span>
-            </div>
-            <a href="#" class="btn-link">Ver</a>
-        </li>
+    <script>
+        /* === DADOS CLÍNICOS CORE === */
+        const gonioData = [
+            { id: 'g_of', name: 'Ombro Flexão', n: 180 }, { id: 'g_oa', name: 'Ombro Abdução', n: 180 },
+            { id: 'g_cf', name: 'Cotovelo Flexão', n: 145 }, { id: 'g_pe', name: 'Punho Extensão', n: 70 },
+            { id: 'g_qf', name: 'Quadril Flexão', n: 120 }, { id: 'g_jf', name: 'Joelho Flexão', n: 135 },
+            { id: 'g_td', name: 'Tornozelo Dorsi.', n: 20 }
+        ];
+        
+        const forcaData = ["Flexores Cervicais", "Manguito Rotador", "Bíceps Braquial", "Tríceps", "Quadríceps", "Isquiotibiais", "Dorsiflexores"];
 
-        <li class="wish-item">
-            <span class="icon">☕</span>
-            <div class="item-info">
-                <span class="item-name">Cafeteira Italiana</span>
-                <span class="item-category">Combustível Criativo</span>
-            </div>
-            <a href="#" class="btn-link">Ver</a>
-        </li>
+        const testesOrto = [
+            { regiao: 'Ombro', testes: ['Neer (Impacto)', 'Hawkins-Kennedy', 'Jobe (Supraespinhal)', 'Gerber (Subescapular)'] },
+            { regiao: 'Cotovelo/Punho', testes: ['Cozen (Epicondilite Lat)', 'Phalen (Túnel do Carpo)', 'Finkelstein'] },
+            { regiao: 'Coluna', testes: ['Lasègue (Ciático)', 'Slump Test', 'Spurling (Cervical)'] },
+            { regiao: 'Joelho/Quadril', testes: ['Lachman (LCA)', 'Gaveta Anterior/Posterior', 'McMurray (Menisco)', 'Thomas (Iliopsoas)'] }
+        ];
 
-        <li class="wish-item">
-            <span class="icon">🛠️</span>
-            <div class="item-info">
-                <span class="item-name">Kit Ferramentas Precisão</span>
-                <span class="item-category">Hardware</span>
-            </div>
-            <a href="#" class="btn-link">Ver</a>
-        </li>
-    </ul>
+        /* === STATE MANAGEMENT === */
+        let db = JSON.parse(localStorage.getItem('PhysioProDB_V2')) || [];
+        let currPat = null;
+        let isBack = false;
 
-    <footer>
-        © 2026 SetupBoom | Organizando o próximo BOOM.
-    </footer>
-</div>
+        /* === INICIALIZAÇÃO === */
+        window.onload = () => {
+            document.getElementById('print-date').innerText = "Data da Impressão: " + new Date().toLocaleDateString('pt-BR');
+            buildTables();
+            updateDashboard();
+            
+            // Listeners para Auto-Save
+            document.querySelectorAll('.auto-save input, .auto-save select, .auto-save textarea').forEach(el => {
+                el.addEventListener('input', () => { autoSave(); updateProgress(); });
+            });
+            document.querySelectorAll('.trigger-red').forEach(el => {
+                el.addEventListener('change', checkRedFlags);
+            });
+        };
 
+        /* === LOGIN BÁSICO === */
+        function realizarLogin() {
+            if(document.getElementById('login-pass').value !== '') {
+                document.getElementById('login-overlay').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('login-overlay').style.display = 'none';
+                    document.getElementById('app-core').style.display = 'flex';
+                }, 500);
+            }
+        }
+
+        /* === GERAÇÃO DINÂMICA DE HTML === */
+        function buildTables() {
+            // Goniometria
+            const tGonio = document.getElementById('tb-gonio');
+            gonioData.forEach(g => {
+                tGonio.innerHTML += `<tr><td>${g.name}</td><td>${g.n}°</td>
+                <td><input type="number" id="${g.id}_e" style="width:70px;" oninput="colorGonio(this,${g.n})"></td>
+                <td><input type="number" id="${g.id}_d" style="width:70px;" oninput="colorGonio(this,${g.n})"></td></tr>`;
+            });
+            
+            // Força
+            const tForca = document.getElementById('tb-forca');
+            forcaData.forEach((f, i) => {
+                tForca.innerHTML += `<tr><td>${f}</td>
+                <td><input type="number" id="f_${i}_e" min="0" max="5" style="width:70px;" oninput="colorForca(this)"></td>
+                <td><input type="number" id="f_${i}_d" min="0" max="5" style="width:70px;" oninput="colorForca(this)"></td></tr>`;
+            });
+
+            // Testes Ortopédicos
+            const boxOrto = document.getElementById('box-testes-orto');
+            testesOrto.forEach(g => {
+                let html = `<div class="form-group"><h3 style="font-size:0.9rem; border-bottom:1px solid var(--border); margin-bottom:10px;">${g.regiao}</h3>`;
+                g.testes.forEach((t, i) => {
+                    let id = `to_${g.regiao.substring(0,3)}_${i}`;
+                    html += `<div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:0.85rem;">
+                        <span>${t}</span>
+                        <select id="${id}" class="auto-save" style="padding:2px 5px; font-size:0.8rem; width:100px;" onchange="diagSuggest()">
+                            <option value="">-</option><option value="Negativo">Neg (-)</option><option value="Positivo">Pos (+)</option>
+                        </select>
+                    </div>`;
+                });
+                boxOrto.innerHTML += html + `</div>`;
+            });
+        }
+
+        /* === NAVEGAÇÃO E TEMAS === */
+        function openTab(id) {
+            if(!currPat && id !== 'tab-pacientes' && id !== 'tab-dashboard') {
+                alert("Por favor, selecione ou crie um paciente primeiro na aba 'Meus Pacientes'.");
+                return;
+            }
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.currentTarget.classList.add('active');
+            if(id === 'tab-sessoes') renderEvoChart();
+        }
+
+        function toggleTheme() { document.body.classList.toggle('dark-mode'); }
+
+        /* === CRUD PACIENTES === */
+        function createNewPatient() {
+            const newId = `PAC-${String(db.length+1).padStart(3,'0')}`;
+            currPat = { id: newId, nome: '', status: 'Em Tratamento', data: new Date().toISOString(), form: {}, dores: [], sessoes: [] };
+            clearForm();
+            document.getElementById('cad_id').value = newId;
+            updateHeader();
+            document.querySelectorAll('.nav-item')[2].click(); // Vai pra Cadastro
+        }
+
+        function savePatientDB() {
+            if(!currPat) return;
+            const nome = document.getElementById('cad_nome').value;
+            if(!nome) return alert("O Nome Completo é obrigatório!");
+            currPat.nome = nome;
+            currPat.patologia = document.getElementById('ava_patologia').value || 'Não definida';
+            currPat.tel = document.getElementById('cad_tel').value;
+            
+            // Coleta dados dos forms
+            document.querySelectorAll('input, select, textarea').forEach(el => {
+                if(el.id) currPat.form[el.id] = el.type === 'checkbox' ? el.checked : el.value;
+            });
+
+            const idx = db.findIndex(p => p.id === currPat.id);
+            if(idx >= 0) db[idx] = currPat; else db.push(currPat);
+            
+            localStorage.setItem('PhysioProDB_V2', JSON.stringify(db));
+            updateHeader(); updateDashboard(); renderPatientTable();
+            alert("Prontuário Salvo com Sucesso!");
+        }
+
+        function autoSave() {
+            if(currPat) {
+                currPat.nome = document.getElementById('cad_nome').value || 'Novo Paciente';
+                updateHeader();
+            }
+        }
+
+        function loadPat(id) {
+            currPat = db.find(p => p.id === id);
+            clearForm();
+            for(let [k, v] of Object.entries(currPat.form)) {
+                let el = document.getElementById(k);
+                if(el) {
+                    el.type === 'checkbox' ? el.checked = v : el.value = v;
+                    if(k.startsWith('g_')) { let n = gonioData.find(g => k.includes(g.id))?.n; colorGonio(el, n); }
+                    if(k.startsWith('f_')) colorForca(el);
+                }
+            }
+            updateHeader(); renderPain(); checkRedFlags(); diagSuggest(); renderSessoes();
+            document.querySelectorAll('.nav-item')[2].click();
+        }
+
+        function renderPatientTable() {
+            const tb = document.getElementById('table-patients');
+            const term = document.getElementById('search-pat')?.value.toLowerCase() || '';
+            tb.innerHTML = '';
+            db.filter(p => p.nome.toLowerCase().includes(term) || p.id.toLowerCase().includes(term)).forEach(p => {
+                let c = p.status==='Alta' ? 'var(--secondary)' : 'var(--success)';
+                tb.innerHTML += `<tr><td><strong>${p.id}</strong></td><td>${p.nome}</td><td>${p.tel||'-'}</td>
+                <td><span class="patient-badge" style="background:var(--bg-body); color:var(--text-main);">${p.patologia}</span></td>
+                <td style="color:${c}; font-weight:bold;">${p.status}</td>
+                <td><button class="btn btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="loadPat('${p.id}')">Abrir</button></td></tr>`;
+            });
+        }
+
+        /* === FUNÇÕES VISUAIS E CLÍNICAS === */
+        function updateHeader() {
+            document.getElementById('header-id').innerText = currPat ? currPat.id : 'SEM PACIENTE';
+            document.getElementById('header-nome').innerText = currPat ? currPat.nome : "Acesse 'Meus Pacientes'";
+        }
+
+        function clearForm() {
+            document.querySelectorAll('input:not([type="range"]), textarea').forEach(e => e.value='');
+            document.querySelectorAll('input[type="checkbox"]').forEach(e => e.checked=false);
+            document.querySelectorAll('.bg-red, .bg-orange').forEach(e => e.classList.remove('bg-red','bg-orange'));
+            document.getElementById('svg-container').querySelectorAll('.pain-pin').forEach(e => e.remove());
+            document.getElementById('pain-list').innerHTML=''; document.getElementById('tb-sessoes').innerHTML='';
+            document.getElementById('red-flag-alert').style.display = 'none';
+        }
+
+        function calcBase() {
+            let n = new Date(document.getElementById('cad_nasc').value);
+            if(!isNaN(n)) document.getElementById('cad_idade').value = (new Date().getFullYear() - n.getFullYear()) + ' anos';
+            let p = parseFloat(document.getElementById('cad_peso').value);
+            let a = parseFloat(document.getElementById('cad_altura').value);
+            if(p>0 && a>0) document.getElementById('cad_imc').value = (p/(a*a)).toFixed(1);
+        }
+
+        function colorGonio(el, norm) {
+            if(!el.value) el.classList.remove('bg-red');
+            else parseFloat(el.value) < norm * 0.8 ? el.classList.add('bg-red') : el.classList.remove('bg-red');
+            autoSave();
+        }
+
+        function colorForca(el) {
+            if(!el.value) el.classList.remove('bg-orange');
+            else parseInt(el.value) < 5 ? el.classList.add('bg-orange') : el.classList.remove('bg-orange');
+            autoSave();
+        }
+
+        function checkRedFlags() {
+            let alertBox = document.getElementById('red-flag-alert');
+            let hasRed = Array.from(document.querySelectorAll('.trigger-red')).some(el => el.checked);
+            alertBox.style.display = hasRed ? 'flex' : 'none';
+        }
+
+        function diagSuggest() {
+            let sug = [];
+            if(document.getElementById('to_Omb_0')?.value === 'Positivo') sug.push("Síndrome do Impacto");
+            if(document.getElementById('to_Col_0')?.value === 'Positivo') sug.push("Radiculopatia / Hérnia Discal");
+            if(document.getElementById('to_Joe_0')?.value === 'Positivo') sug.push("Lesão de LCA");
+            document.getElementById('txt-diag-sugestao').innerText = sug.length > 0 ? sug.join(' ou ') : "Selecione resultados positivos acima.";
+        }
+
+        /* === MAPA DE DOR === */
+        function toggleBody() {
+            isBack = !isBack;
+            document.getElementById('body-vector').classList.toggle('back');
+            renderPain();
+        }
+
+        function addPain(e) {
+            if(!currPat || e.target.classList.contains('pain-pin')) return;
+            const r = e.currentTarget.getBoundingClientRect();
+            currPat.dores.push({
+                id: Date.now(), x: ((e.clientX - r.left)/r.width)*100, y: ((e.clientY - r.top)/r.height)*100,
+                v: isBack?'back':'front', eva: document.getElementById('pain_val').value,
+                tipo: document.getElementById('pain_type').value, freq: document.getElementById('pain_freq').value,
+                obs: document.getElementById('pain_nota').value
+            });
+            renderPain(); document.getElementById('pain_nota').value=''; autoSave();
+        }
+
+        function renderPain() {
+            let cont = document.getElementById('svg-container'); let lst = document.getElementById('pain-list');
+            cont.querySelectorAll('.pain-pin').forEach(e => e.remove()); lst.innerHTML = '';
+            if(!currPat) return;
+            currPat.dores.forEach(p => {
+                let col = p.eva > 7 ? 'var(--danger)' : p.eva > 4 ? 'var(--warning)' : 'var(--primary)';
+                if((isBack && p.v==='back') || (!isBack && p.v==='front')) {
+                    let d = document.createElement('div'); d.className='pain-pin'; d.style.left=p.x+'%'; d.style.top=p.y+'%'; d.style.background=col; cont.appendChild(d);
+                }
+                lst.innerHTML += `<div style="background:var(--bg-body); padding:10px; margin-bottom:8px; border-left:4px solid ${col}; border-radius:4px; display:flex; justify-content:space-between;">
+                    <div><b>${p.v==='front'?'Frente':'Costas'} (EVA: ${p.eva})</b><br><small>${p.tipo} - ${p.obs}</small></div>
+                    <button style="border:none; background:none; cursor:pointer;" onclick="delPain(${p.id})">❌</button>
+                </div>`;
+            });
+        }
+        function delPain(id) { currPat.dores = currPat.dores.filter(p=>p.id!==id); renderPain(); autoSave(); }
+
+        /* === SESSÕES === */
+        function addSession() {
+            if(!currPat) return;
+            let e = prompt("EVA de Hoje (0-10):"); if(!e) return;
+            let r = prompt("Evolução / Condutas:"); if(!r) return;
+            currPat.sessoes.push({ d: new Date().toLocaleDateString('pt-BR'), eva: parseInt(e), r: r });
+            savePatientDB(); renderSessoes(); renderEvoChart();
+        }
+        function renderSessoes() {
+            let tb = document.getElementById('tb-sessoes'); tb.innerHTML='';
+            if(!currPat) return;
+            currPat.sessoes.forEach((s,i) => {
+                tb.innerHTML += `<tr><td>${s.d}</td><td><b>#${i+1}</b></td>
+                <td><span class="patient-badge" style="background:${s.eva>6?'var(--danger)':'var(--primary)'}; color:white;">${s.eva}</span></td>
+                <td>${s.r}</td><td><button class="btn btn-outline" style="padding:4px;" onclick="delSess(${i})">X</button></td></tr>`;
+            });
+        }
+        function delSess(i) { currPat.sessoes.splice(i,1); savePatientDB(); renderSessoes(); renderEvoChart(); }
+        
+        function renderEvoChart() {
+            let c = document.getElementById('evo-chart'); c.innerHTML='';
+            if(!currPat || currPat.sessoes.length===0) return;
+            currPat.sessoes.forEach((s,i) => {
+                let h = (s.eva/10)*100; let col = s.eva>7?'var(--danger)':s.eva>4?'var(--warning)':'var(--success)';
+                c.innerHTML += `<div class="chart-bar-wrap"><small>${s.eva}</small><div class="chart-bar" style="height:${Math.max(h,5)}%; background:${col};"></div><small>#${i+1}</small></div>`;
+            });
+        }
+
+        /* === EXTRAS E DASHBOARD === */
+        function updateDashboard() {
+            document.getElementById('dash-total').innerText = db.length;
+            document.getElementById('dash-ativos').innerText = db.filter(p=>p.status!=='Alta').length;
+            document.getElementById('dash-alta').innerText = db.filter(p=>p.status==='Alta').length;
+            let evas = db.flatMap(p => p.sessoes[0] ? p.sessoes[0].eva : []);
+            document.getElementById('dash-dor').innerText = evas.length ? (evas.reduce((a,b)=>a+b,0)/evas.length).toFixed(1) : 0;
+        }
+
+        function darAlta() {
+            if(!currPat) return;
+            if(confirm("Deseja realmente finalizar o tratamento e dar alta a este paciente?")) {
+                currPat.status = 'Alta'; savePatientDB(); alert("Alta registrada com sucesso.");
+            }
+        }
+
+        function updateProgress() {
+            let inp = document.querySelectorAll('.auto-save input, .auto-save select, .auto-save textarea');
+            let p = Array.from(inp).filter(e => e.type==='checkbox'?e.checked:e.value!=='').length;
+            document.getElementById('progress-bar').style.width = (p/inp.length)*100 + '%';
+        }
+
+        function exportJSON() {
+            let a = document.createElement('a');
+            a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
+            a.download = "PhysioPro_Backup.json"; a.click();
+        }
+    </script>
 </body>
 </html>
